@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Student Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .login-container {
+            max-width: 450px;
+            width: 100%;
+            padding: 15px;
+            margin: 0 auto;
+        }
+        
+        .login-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            animation: slideUp 0.6s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 30px 20px;
+            text-align: center;
+        }
+        
+        /* Logo Styling */
+        .logo-container {
+            margin-bottom: 15px;
+        }
+        
+        .logo-img {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            background: white;
+            border-radius: 50%;
+            padding: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .logo-icon {
+            font-size: 5rem;
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            width: 100px;
+            height: 100px;
+            line-height: 100px;
+            text-align: center;
+            border-radius: 50%;
+            margin: 0 auto;
+        }
+        
+        .login-header h3 {
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .login-header p {
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+        
+        .login-body {
+            padding: 30px;
+            background: white;
+        }
+        
+        .form-control, .input-group-text {
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            padding: 12px 15px;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .input-group-text {
+            background-color: #f8f9fc;
+            border-right: none;
+        }
+        
+        .input-group .form-control {
+            border-left: none;
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .demo-credentials {
+            background-color: #f8f9fc;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .demo-credentials h6 {
+            color: #5a5c69;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .role-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .role-admin { background-color: #e74a3b; color: white; }
+        .role-faculty { background-color: #1cc88a; color: white; }
+        .role-student { background-color: #36b9cc; color: white; }
+        
+        .credential-text {
+            font-size: 13px;
+            color: #858796;
+            margin-bottom: 5px;
+        }
+        
+        .credential-text code {
+            background-color: #eaecf4;
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: #5a5c69;
+            cursor: pointer;
+        }
+        
+        .footer-text {
+            text-align: center;
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+        
+        .password-toggle {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        <i class="bi bi-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="card login-card">
+            <div class="login-header">
+                <!-- ============================================ -->
+                <!-- LOGO SECTION - YAHAN LOGO ADD KARO -->
+                <!-- ============================================ -->
+                
+                <!-- Option 1: Image Logo (if you have logo.png in static/images/) -->
+                <div class="logo-container">
+                    <img src="{{ url_for('static', filename='images/logo.jpg') }}" 
+                         alt="College Logo" 
+                         class="logo-img"
+                         onerror="this.style.display='none'; document.getElementById('fallbackLogo').style.display='block';">
+                </div>
+                
+                <!-- Option 2: Icon Logo (Fallback if image not found) -->
+                <div id="fallbackLogo" class="logo-icon" style="display: none;">
+                    <i class="bi bi-building"></i>
+                </div>
+                
+                <!-- ============================================ -->
+                
+                <h3>Student Management System</h3>
+                <p>College Major Project</p>
+            </div>
+            
+            <div class="login-body">
+                <form method="POST" action="{{ url_for('login') }}" id="loginForm">
+                    <div class="mb-4">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-person"></i>
+                            </span>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="username" 
+                                   name="username" 
+                                   placeholder="Username" 
+                                   required 
+                                   autofocus>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-lock"></i>
+                            </span>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="password" 
+                                   name="password" 
+                                   placeholder="Password" 
+                                   required>
+                            <span class="input-group-text password-toggle" onclick="togglePassword()">
+                                <i class="bi bi-eye" id="toggleIcon"></i>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4 form-check">
+                        <input type="checkbox" class="form-check-input" id="rememberMe" name="remember">
+                        <label class="form-check-label" for="rememberMe">Remember me</label>
+                        <a href="#" class="float-end text-decoration-none" onclick="forgotPassword()">Forgot Password?</a>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-login w-100">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                    </button>
+                </form>
+                
+                <!-- Demo Credentials -->
+                <div class="demo-credentials">
+                    <h6 class="text-center">
+                        <i class="bi bi-info-circle me-2"></i>Demo Credentials
+                    </h6>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <span class="role-badge role-admin">Admin</span>
+                            <div class="credential-text">
+                                <code onclick="fillCredentials('admin', 'admin123')">admin</code>
+                            </div>
+                            <div class="credential-text">
+                                <code onclick="fillCredentials('admin', 'admin123')">admin123</code>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <span class="role-badge role-faculty">Faculty</span>
+                            <div class="credential-text">
+                                <code onclick="fillCredentials('faculty1', 'pass123')">faculty1</code>
+                            </div>
+                            <div class="credential-text">
+                                <code onclick="fillCredentials('faculty1', 'pass123')">pass123</code>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <span class="role-badge role-student">Student</span>
+                            <div class="credential-text">
+                                <code onclick="fillCredentials('student1', 'pass123')">student1</code>
+                            </div>
+                            <div class="credential-text">
+                                <code onclick="fillCredentials('student1', 'pass123')">pass123</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-text">
+            <p>© 2024 Student Management System. All rights reserved.</p>
+        </div>
+    </div>
+    
+    <!-- Forgot Password Modal -->
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-key me-2"></i>Forgot Password
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="forgotPasswordForm">
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="resetEmail" required>
+                            <div class="form-text">Enter your registered email address.</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-envelope me-2"></i>Send Reset Link
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Password visibility toggle
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('bi-eye');
+                toggleIcon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('bi-eye-slash');
+                toggleIcon.classList.add('bi-eye');
+            }
+        }
+        
+        // Fill credentials
+        function fillCredentials(username, password) {
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = password;
+        }
+        
+        // Forgot password modal
+        function forgotPassword() {
+            const modal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
+            modal.show();
+        }
+        
+        // Handle forgot password form
+        document.getElementById('forgotPasswordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('resetEmail').value;
+            alert('Password reset link sent to: ' + email + '\n\n(Demo Feature)');
+            bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal')).hide();
+            document.getElementById('resetEmail').value = '';
+        });
+    </script>
+</body>
+</html>

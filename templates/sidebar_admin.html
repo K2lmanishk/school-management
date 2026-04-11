@@ -1,0 +1,55 @@
+<li class="nav-item">
+    <a class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}" href="{{ url_for('admin_dashboard') }}">
+        <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.endpoint == 'manage_users' %}active{% endif %}" href="{{ url_for('manage_users') }}">
+        <i class="bi bi-people"></i> <span>Manage Users</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.endpoint == 'manage_courses' %}active{% endif %}" href="{{ url_for('manage_courses') }}">
+        <i class="bi bi-book"></i> <span>Manage Courses</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.endpoint == 'manage_subjects' %}active{% endif %}" href="{{ url_for('manage_subjects') }}">
+        <i class="bi bi-journal"></i> <span>Manage Subjects</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.endpoint == 'assign_faculty' %}active{% endif %}" href="{{ url_for('assign_faculty') }}">
+        <i class="bi bi-person-check"></i> <span>Assign Faculty</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.endpoint == 'manage_notices' %}active{% endif %}" href="{{ url_for('manage_notices') }}">
+        <i class="bi bi-megaphone"></i> <span>Notices</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.endpoint == 'manage_notifications_page' %}active{% endif %}" href="{{ url_for('manage_notifications_page') }}">
+        <i class="bi bi-bell"></i> <span>Send Notifications</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.endpoint == 'manage_timetable' %}active{% endif %}" href="{{ url_for('manage_timetable') }}">
+        <i class="bi bi-calendar-week"></i> <span>Manage Timetable</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.endpoint == 'admin_manage_fees' %}active{% endif %}" href="{{ url_for('admin_manage_fees') }}">
+        <i class="bi bi-cash-stack"></i> <span>Fee Management</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="{{ url_for('send_sms_page') }}">
+        <i class="bi bi-chat-dots"></i> <span>Send SMS</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="{{ url_for('profile') }}">
+        <i class="bi bi-person"></i> <span>My Profile</span>
+    </a>
+</li>

@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="mt-4">
+    <i class="bi bi-cash-stack me-2"></i>Fee Management (Admin)
+</h1>
+<ol class="breadcrumb mb-4">
+    <li class="breadcrumb-item"><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active">Fee Management</li>
+</ol>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <i class="bi bi-cash" style="font-size: 2rem;"></i>
+                <h5 class="mt-2">₹{{ "%.2f"|format(total_fees) }}</h5>
+                <p class="mb-0">Total Fees</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+                <h5 class="mt-2">₹{{ "%.2f"|format(total_paid) }}</h5>
+                <p class="mb-0">Total Collected</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <i class="bi bi-clock-history" style="font-size: 2rem;"></i>
+                <h5 class="mt-2">₹{{ "%.2f"|format(total_due) }}</h5>
+                <p class="mb-0">Total Pending</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <i class="bi bi-people" style="font-size: 2rem;"></i>
+                <h5 class="mt-2">{{ pending_count }}</h5>
+                <p class="mb-0">Students with Dues</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk SMS Button -->
+<div class="row mb-3">
+    <div class="col-12">
+        <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#bulkSMSModal">
+            <i class="bi bi-send-fill me-2"></i>Send Bulk SMS to Due Students
+        </button>
+        <a href="{{ url_for('send_sms_page') }}" class="btn btn-outline-primary">
+            <i class="bi bi-chat-dots me-2"></i>Advanced SMS
+        </a>
+    </div>
+</div>
+
+<!-- Fee Records Table -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <i class="bi bi-table me-2"></i>Student Fee Records
+        <div class="float-end">
+            <input type="text" class="form-control form-control-sm" id="searchInput" placeholder="Search student...">
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="feeTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Roll No</th>
+                        <th>Student Name</th>
+                        <th>Course</th>
+                        <th>Semester</th>
+                        <th>Phone</th>
+                        <th>Total Fee</th>
+                        <th>Paid</th>
+                        <th>Due</th>
+                        <th>Status</th>
+                        <th>Due Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in fee_data %}
+                    <tr>
+                        <td>{{ item.student.roll_no }}</td>
+                        <td>{{ item.student.user.full_name }}</td>
+                        <td>{{ item.student.course.name if item.student.course else 'N/A' }}</td>
+                        <td>{{ item.student.semester }}</td>
+                        <td>{{ item.student.phone or 'N/A' }}</td>
+                        <td>₹{{ "%.2f"|format(item.fee.amount) }}</td>
+                        <td>₹{{ "%.2f"|format(item.fee.paid_amount) }}</td>
+                        <td>₹{{ "%.2f"|format(item.fee.amount - item.fee.paid_amount) }}</td>
+                        <td>
+                            <span class="badge {% if item.fee.status == 'Paid' %}bg-success{% elif item.fee.status == 'Partial' %}bg-warning{% else %}bg-danger{% endif %}">
+                                {{ item.fee.status }}
+                            </span>
+                        </td>
+                        <td>{{ item.fee.due_date.strftime('%Y-%m-%d') if item.fee.due_date else 'N/A' }}</td>
+                        <td>
+                            <!-- ============================================ -->
+                            <!-- ACTION BUTTONS - YAHAN HAI SEND REMINDER -->
+                            <!-- ============================================ -->
+                            <div class="btn-group" role="group">
+                                {% if item.fee.status != 'Paid' and item.student.phone %}
+                                <a href="{{ url_for('send_fee_reminder', student_id=item.student.id) }}" 
+                                   class="btn btn-sm btn-warning" 
+                                   onclick="return confirm('Send SMS reminder to {{ item.student.user.full_name }} at {{ item.student.phone }}?')"
+                                   title="Send SMS Reminder">
+                                    <i class="bi bi-phone"></i>
+                                </a>
+                                {% else %}
+                                <button class="btn btn-sm btn-secondary" disabled 
+                                        title="{% if item.fee.status == 'Paid' %}Already Paid{% else %}No phone number{% endif %}">
+                                    <i class="bi bi-phone"></i>
+                                </button>
+                                {% endif %}
+                                
+                                <button class="btn btn-sm btn-success" 
+                                        onclick="openRecordPaymentModal({{ item.student.id }}, {{ item.fee.id }}, {{ item.fee.amount }}, {{ item.fee.paid_amount }})"
+                                        title="Record Payment">
+                                    <i class="bi bi-cash"></i>
+                                </button>
+                                
+                                <button class="btn btn-sm btn-info" 
+                                        onclick="viewFeeHistory({{ item.student.id }})"
+                                        title="View History">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <!-- ============================================ -->
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk SMS Modal -->
+<div class="modal fade" id="bulkSMSModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-send-fill me-2"></i>Send Bulk SMS
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('bulk_sms') }}">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        SMS will be sent to all students with pending fees.
+                    </div>
+                    <input type="hidden" name="audience" value="due_fees">
+                    <div class="mb-3">
+                        <label class="form-label">Message</label>
+                        <textarea class="form-control" name="message" rows="4" maxlength="160" required 
+                                  placeholder="Enter your message here...">{{ default_message }}</textarea>
+                        <small class="text-muted">
+                            <span id="charCount">0</span>/160 characters
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-info">
+                        <i class="bi bi-send-fill me-2"></i>Send to All Due Students
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Record Payment Modal -->
+<div class="modal fade" id="recordPaymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-cash-stack me-2"></i>Record Payment
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('record_payment') }}">
+                <div class="modal-body">
+                    <input type="hidden" name="fee_id" id="paymentFeeId">
+                    <div class="mb-3">
+                        <label class="form-label">Student</label>
+                        <input type="text" class="form-control" id="paymentStudentName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Total Fee Amount</label>
+                        <input type="text" class="form-control" id="paymentTotalAmount" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Already Paid</label>
+                        <input type="text" class="form-control" id="paymentAlreadyPaid" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Due Amount</label>
+                        <input type="text" class="form-control" id="paymentDueAmount" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Amount <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="payment_amount" id="paymentAmount" 
+                               min="1" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <select class="form-select" name="payment_method">
+                            <option value="Cash">Cash</option>
+                            <option value="Online">Online</option>
+                            <option value="Cheque">Cheque</option>
+                            <option value="DD">DD</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Transaction ID (Optional)</label>
+                        <input type="text" class="form-control" name="transaction_id" placeholder="Enter reference number">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Remarks (Optional)</label>
+                        <textarea class="form-control" name="remarks" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-lg me-2"></i>Record Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Search functionality
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    var searchTerm = this.value.toLowerCase();
+    var rows = document.querySelectorAll('#feeTable tbody tr');
+    
+    rows.forEach(function(row) {
+        var text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+
+// Character counter for SMS
+var textarea = document.querySelector('textarea[name="message"]');
+var charCount = document.getElementById('charCount');
+if (textarea) {
+    textarea.addEventListener('input', function() {
+        charCount.textContent = this.value.length;
+    });
+    charCount.textContent = textarea.value.length;
+}
+
+// Open record payment modal
+function openRecordPaymentModal(studentId, feeId, totalAmount, paidAmount) {
+    // Find the row to get student name
+    var rows = document.querySelectorAll('#feeTable tbody tr');
+    var studentName = '';
+    rows.forEach(function(row) {
+        if (row.innerHTML.includes('student_id') || true) {
+            studentName = row.cells[1].textContent;
+        }
+    });
+    
+    var dueAmount = totalAmount - paidAmount;
+    
+    document.getElementById('paymentFeeId').value = feeId;
+    document.getElementById('paymentStudentName').value = studentName || 'Student';
+    document.getElementById('paymentTotalAmount').value = '₹' + totalAmount.toFixed(2);
+    document.getElementById('paymentAlreadyPaid').value = '₹' + paidAmount.toFixed(2);
+    document.getElementById('paymentDueAmount').value = '₹' + dueAmount.toFixed(2);
+    document.getElementById('paymentAmount').max = dueAmount;
+    document.getElementById('paymentAmount').value = dueAmount;
+    
+    var modal = new bootstrap.Modal(document.getElementById('recordPaymentModal'));
+    modal.show();
+}
+
+// View fee history
+function viewFeeHistory(studentId) {
+    window.location.href = '/admin/student-fee-history/' + studentId;
+}
+
+// Show toast notification
+function showToast(message, type) {
+    var toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+    }
+    
+    var icon = 'info-circle';
+    if (type === 'success') icon = 'check-circle';
+    else if (type === 'danger') icon = 'exclamation-circle';
+    else if (type === 'warning') icon = 'exclamation-triangle';
+    
+    var toastEl = document.createElement('div');
+    toastEl.className = 'toast align-items-center text-white bg-' + type + ' border-0';
+    toastEl.innerHTML = '<div class="d-flex">' +
+        '<div class="toast-body"><i class="bi bi-' + icon + ' me-2"></i>' + message + '</div>' +
+        '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>' +
+        '</div>';
+    
+    toastContainer.appendChild(toastEl);
+    var toast = new bootstrap.Toast(toastEl);
+    toast.show();
+    
+    toastEl.addEventListener('hidden.bs.toast', function() {
+        toastEl.remove();
+    });
+}
+</script>
+{% endblock %}

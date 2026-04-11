@@ -1,0 +1,35 @@
+<li class="nav-item">
+    <a class="nav-link {% if request.endpoint == 'student_dashboard' %}active{% endif %}" href="{{ url_for('student_dashboard') }}">
+        <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.endpoint == 'view_attendance' %}active{% endif %}" href="{{ url_for('view_attendance') }}">
+        <i class="bi bi-calendar-check"></i> <span>Attendance</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.endpoint == 'view_marks' %}active{% endif %}" href="{{ url_for('view_marks') }}">
+        <i class="bi bi-trophy"></i> <span>Marks & Results</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.endpoint == 'view_fees' %}active{% endif %}" href="{{ url_for('view_fees') }}">
+        <i class="bi bi-cash-coin"></i> <span>Fee Status</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="{{ url_for('profile') }}">
+        <i class="bi bi-person"></i> <span>My Profile</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.endpoint == 'student_timetable' %}active{% endif %}" href="{{ url_for('student_timetable') }}">
+        <i class="bi bi-calendar-week"></i> <span>Timetable</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if request.endpoint == 'student_id_card' %}active{% endif %}" href="{{ url_for('student_id_card') }}">
+        <i class="bi bi-credit-card"></i> <span>Digital ID Card</span>
+    </a>
+</li>
