@@ -19,27 +19,12 @@
             <div class="card-body">
                 <form method="POST" action="{{ url_for('add_timetable') }}">
                     <div class="mb-3">
-                        <label class="form-label">Course</label>
-                        <select class="form-select" name="course_id" id="courseSelect" required>
-                            <option value="">Select Course</option>
-                            {% for course in courses %}
-                            <option value="{{ course.id }}">{{ course.name }} ({{ course.code }})</option>
+                        <label class="form-label">Class</label>
+                        <select class="form-select" name="class_name" id="classSelect" required>
+                            <option value="">Select Class</option>
+                            {% for class_item in classes %}
+                            <option value="{{ class_item }}">{{ class_item }}</option>
                             {% endfor %}
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Semester</label>
-                        <select class="form-select" name="semester" id="semesterSelect" required>
-                            <option value="">Select Semester</option>
-                            <option value="1">Semester 1</option>
-                            <option value="2">Semester 2</option>
-                            <option value="3">Semester 3</option>
-                            <option value="4">Semester 4</option>
-                            <option value="5">Semester 5</option>
-                            <option value="6">Semester 6</option>
-                            <option value="7">Semester 7</option>
-                            <option value="8">Semester 8</option>
                         </select>
                     </div>
                     
@@ -76,8 +61,8 @@
                         <select class="form-select" name="subject_id" id="subjectSelect" required>
                             <option value="">Select Subject</option>
                             {% for subject in subjects %}
-                            <option value="{{ subject.id }}" data-course="{{ subject.course_id }}" data-semester="{{ subject.semester }}">
-                                {{ subject.name }} ({{ subject.code }})
+                            <option value="{{ subject.id }}" data-class="{{ subject.class_name }}">
+                                {{ subject.name }} ({{ subject.code }}) - {{ subject.class_name }}
                             </option>
                             {% endfor %}
                         </select>
@@ -95,7 +80,7 @@
                     
                     <div class="mb-3">
                         <label class="form-label">Room Number</label>
-                        <input type="text" class="form-control" name="room_no" placeholder="e.g., Lab 101" required>
+                        <input type="text" class="form-control" name="room_no" placeholder="e.g., Room 101" required>
                     </div>
                     
                     <button type="submit" class="btn btn-primary w-100">
@@ -112,10 +97,10 @@
             <div class="card-header bg-info text-white">
                 <i class="bi bi-table me-2"></i>Current Timetable
                 <div class="float-end">
-                    <select class="form-select form-select-sm d-inline-block w-auto" id="filterCourse">
-                        <option value="">All Courses</option>
-                        {% for course in courses %}
-                        <option value="{{ course.id }}">{{ course.name }}</option>
+                    <select class="form-select form-select-sm d-inline-block w-auto" id="filterClass">
+                        <option value="">All Classes</option>
+                        {% for class_item in classes %}
+                        <option value="{{ class_item }}">{{ class_item }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -125,24 +110,24 @@
                     <table class="table table-bordered table-hover">
                         <thead class="table-dark">
                             <tr>
+                                <th>Class</th>
                                 <th>Day</th>
                                 <th>Time</th>
                                 <th>Subject</th>
                                 <th>Faculty</th>
                                 <th>Room</th>
-                                <th>Course/Sem</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for tt in timetables %}
-                            <tr>
+                            <tr data-class="{{ tt.class_name }}">
+                                <td>{{ tt.class_name }}</td>
                                 <td>{{ tt.day }}</td>
                                 <td>{{ tt.time_slot }}</td>
                                 <td>{{ tt.subject.name }} ({{ tt.subject.code }})</td>
                                 <td>{{ tt.faculty.user.full_name }}</td>
                                 <td>{{ tt.room_no }}</td>
-                                <td>{{ tt.course.code }} - Sem {{ tt.semester }}</td>
                                 <td>
                                     <button class="btn btn-sm btn-danger" onclick="deleteTimetable({{ tt.id }})">
                                         <i class="bi bi-trash"></i>
@@ -163,13 +148,12 @@
 </div>
 
 <script>
-// Filter subjects based on course and semester
-document.getElementById('courseSelect').addEventListener('change', filterSubjects);
-document.getElementById('semesterSelect').addEventListener('change', filterSubjects);
+// Filter subjects based on class
+document.getElementById('classSelect').addEventListener('change', filterSubjects);
+document.getElementById('filterClass').addEventListener('change', filterTable);
 
 function filterSubjects() {
-    var courseId = document.getElementById('courseSelect').value;
-    var semester = document.getElementById('semesterSelect').value;
+    var className = document.getElementById('classSelect').value;
     var subjectSelect = document.getElementById('subjectSelect');
     var options = subjectSelect.options;
     
@@ -180,10 +164,9 @@ function filterSubjects() {
             continue;
         }
         
-        var subjectCourse = option.getAttribute('data-course');
-        var subjectSemester = option.getAttribute('data-semester');
+        var subjectClass = option.getAttribute('data-class');
         
-        if ((!courseId || subjectCourse === courseId) && (!semester || subjectSemester === semester)) {
+        if (!className || subjectClass === className) {
             option.style.display = '';
         } else {
             option.style.display = 'none';
@@ -192,16 +175,26 @@ function filterSubjects() {
     subjectSelect.value = '';
 }
 
+function filterTable() {
+    var filterClass = document.getElementById('filterClass').value;
+    var rows = document.querySelectorAll('tbody tr');
+    
+    rows.forEach(function(row) {
+        if (filterClass === '' || row.getAttribute('data-class') === filterClass) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
 function deleteTimetable(id) {
     if (confirm('Are you sure you want to delete this timetable entry?')) {
         fetch('/admin/timetable/delete/' + id, { method: 'POST' })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error deleting timetable');
-                }
+                if (data.success) location.reload();
+                else alert('Error deleting timetable');
             });
     }
 }

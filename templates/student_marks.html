@@ -10,39 +10,55 @@
 <div class="card mb-4">
     <div class="card-header"><i class="bi bi-trophy"></i> Subject-wise Performance</div>
     <div class="card-body">
+        {% if marks %}
         <div class="table-responsive">
             <table class="table table-bordered table-hover">
                 <thead class="table-dark">
                     <tr>
                         <th>Subject</th>
+                        <th>Class</th>
                         <th>Exam Type</th>
                         <th>Max Marks</th>
                         <th>Obtained</th>
                         <th>Percentage</th>
+                        <th>Grade</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for mark, sub in marks %}
                     <tr>
                         <td>{{ sub.name }} ({{ sub.code }})</td>
+                        <td>{{ sub.class_name }}</td>
                         <td>{{ mark.exam_type }}</td>
                         <td>{{ mark.max_marks }}</td>
-                        <td>{{ mark.obtained_marks }}</td>
+                        <td><strong>{{ mark.obtained_marks }}</strong></td>
                         <td>
                             {% set percent = (mark.obtained_marks / mark.max_marks * 100) %}
-                            <span class="badge {% if percent >= 75 %}bg-success{% elif percent >= 40 %}bg-warning{% else %}bg-danger{% endif %}">
+                            <span class="badge {% if percent >= 75 %}bg-success{% elif percent >= 60 %}bg-info{% elif percent >= 45 %}bg-warning{% else %}bg-danger{% endif %} p-2">
                                 {{ "%.1f"|format(percent) }}%
                             </span>
                         </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="5" class="text-center">No marks recorded yet.</td>
+                        <td>
+                            {% set percent = (mark.obtained_marks / mark.max_marks * 100) %}
+                            {% if percent >= 90 %}A+
+                            {% elif percent >= 80 %}A
+                            {% elif percent >= 70 %}B+
+                            {% elif percent >= 60 %}B
+                            {% elif percent >= 50 %}C
+                            {% elif percent >= 40 %}D
+                            {% else %}F{% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-trophy" style="font-size: 4rem; opacity: 0.3;"></i>
+            <p class="text-muted mt-3">No marks recorded yet.</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

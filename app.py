@@ -1,6 +1,6 @@
 # ============================================
-# STUDENT MANAGEMENT SYSTEM - COMPLETE APP.PY
-# All Features Working + All Fixes
+# SCHOOL MANAGEMENT SYSTEM - KD PUBLIC SCHOOL
+# All Features Working + Mobile Responsive
 # ============================================
 
 # 1. IMPORTS
@@ -10,20 +10,26 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from models import db, User, Student, Faculty, Course, Subject, Enrollment, Attendance, Marks, Fee, Notice, FacultyAssignment, Timetable, Notification
 import os
+from datetime import datetime, timedelta
+import json
+import qrcode
+import io
 
 # Configuration with environment variable fallback
 class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///college.db')
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'kd-public-school-secret-key-2024')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///school.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
     TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
     TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '')
-from datetime import datetime, timedelta
-import json
-import os
-import qrcode
-import io
+
+# SCHOOL CONFIGURATION
+SCHOOL_NAME = "KD Public School"
+SCHOOL_ADDRESS = "Chapra, Bihar 841313"
+SCHOOL_CONTACT = "+91-9876543210"
+SCHOOL_EMAIL = "kdpublicschoolpachraur@gmail.com"
+ACADEMIC_YEAR = "2024-2026"
 
 # 2. APP INITIALIZATION
 app = Flask(__name__)
@@ -71,8 +77,16 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 @app.context_processor
-def inject_now():
-    return {'now': datetime.utcnow(), 'today': datetime.utcnow().date()}
+def inject_school_info():
+    return {
+        'now': datetime.utcnow(),
+        'today': datetime.utcnow().date(),
+        'school_name': SCHOOL_NAME,
+        'school_address': SCHOOL_ADDRESS,
+        'school_contact': SCHOOL_CONTACT,
+        'school_email': SCHOOL_EMAIL,
+        'academic_year': ACADEMIC_YEAR
+    }
 
 # ============================================
 # 5. AUTHENTICATION ROUTES
@@ -173,7 +187,7 @@ def add_user():
                 user_id=user.id,
                 roll_no=data.get('roll_no', ''),
                 course_id=data.get('course_id') if data.get('course_id') else None,
-                semester=data.get('semester') if data.get('semester') else None,
+                class_name=data.get('class_name') if data.get('class_name') else None,
                 dob=datetime.strptime(data['dob'], '%Y-%m-%d') if data.get('dob') else None,
                 phone=data.get('phone', ''),
                 address=data.get('address', ''),
@@ -236,8 +250,7 @@ def add_course():
     course = Course(
         name=request.form['name'],
         code=request.form['code'],
-        duration_years=request.form['duration_years'],
-        total_semesters=request.form['total_semesters']
+        description=request.form.get('description', '')
     )
     db.session.add(course)
     db.session.commit()
@@ -263,7 +276,8 @@ def manage_subjects():
         return redirect(url_for('login'))
     subjects = Subject.query.all()
     courses = Course.query.all()
-    return render_template('manage_subjects.html', subjects=subjects, courses=courses)
+    classes = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11 Science', 'Class 11 Commerce', 'Class 11 Arts', 'Class 12 Science', 'Class 12 Commerce', 'Class 12 Arts']
+    return render_template('manage_subjects.html', subjects=subjects, courses=courses, classes=classes)
 
 @app.route('/admin/subject/add', methods=['POST'])
 @login_required
@@ -276,8 +290,8 @@ def add_subject():
         return redirect(url_for('manage_subjects'))
     
     subject = Subject(
-        course_id=request.form['course_id'],
-        semester=request.form['semester'],
+        course_id=request.form.get('course_id') or None,
+        class_name=request.form['class_name'],
         name=request.form['name'],
         code=request.form['code'],
         credits=request.form['credits'],
@@ -364,7 +378,7 @@ def mark_attendance():
         subject_id = request.form['subject_id']
         date = datetime.strptime(request.form['date'], '%Y-%m-%d')
         subject = Subject.query.get(subject_id)
-        students = Student.query.filter_by(course_id=subject.course_id, semester=subject.semester).all()
+        students = Student.query.filter_by(class_name=subject.class_name).all()
         
         for student in students:
             status = request.form.get('status_' + str(student.id), 'Absent')
@@ -391,7 +405,7 @@ def enter_marks():
         exam_type = request.form['exam_type']
         max_marks = int(request.form['max_marks'])
         subject = Subject.query.get(subject_id)
-        students = Student.query.filter_by(course_id=subject.course_id, semester=subject.semester).all()
+        students = Student.query.filter_by(class_name=subject.class_name).all()
         
         for student in students:
             obtained = request.form.get('marks_' + str(student.id))
@@ -519,7 +533,8 @@ def manage_timetable():
     timetables = Timetable.query.all()
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     time_slots = ['09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00']
-    return render_template('manage_timetable.html', courses=courses, faculties=faculties, subjects=subjects, timetables=timetables, days=days, time_slots=time_slots)
+    classes = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11 Science', 'Class 11 Commerce', 'Class 11 Arts', 'Class 12 Science', 'Class 12 Commerce', 'Class 12 Arts']
+    return render_template('manage_timetable.html', courses=courses, faculties=faculties, subjects=subjects, timetables=timetables, days=days, time_slots=time_slots, classes=classes)
 
 @app.route('/admin/timetable/add', methods=['POST'])
 @login_required
@@ -528,7 +543,7 @@ def add_timetable():
         return jsonify({'error': 'Unauthorized'}), 403
     timetable = Timetable(
         course_id=request.form.get('course_id'),
-        semester=request.form.get('semester'),
+        class_name=request.form.get('class_name'),
         day=request.form.get('day'),
         time_slot=request.form.get('time_slot'),
         subject_id=request.form.get('subject_id'),
@@ -569,7 +584,7 @@ def student_timetable():
     if current_user.role != 'student':
         return redirect(url_for('login'))
     student = Student.query.filter_by(user_id=current_user.id).first()
-    timetables = Timetable.query.filter_by(course_id=student.course_id, semester=student.semester).all() if student else []
+    timetables = Timetable.query.filter_by(class_name=student.class_name).all() if student else []
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     time_slots = ['09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00']
     return render_template('student_timetable.html', timetables=timetables, days=days, time_slots=time_slots)
@@ -709,7 +724,7 @@ def send_fee_reminder(student_id):
         fee = Fee.query.filter_by(student_id=student_id).filter(Fee.status != 'Paid').first()
         if fee:
             due = fee.amount - fee.paid_amount
-            message = f"Dear {student.user.full_name}, your fee of Rs.{due:.2f} is pending. Due date: {fee.due_date}. - College Admin"
+            message = f"Dear {student.user.full_name}, your fee of Rs.{due:.2f} is pending. Due date: {fee.due_date}. - {SCHOOL_NAME}"
             success, sid = send_sms(student.phone, message)
             flash('SMS sent!' if success else f'Failed: {sid}', 'success' if success else 'danger')
     return redirect(url_for('admin_manage_fees'))
@@ -737,7 +752,7 @@ def admin_manage_fees():
                 pending_count += 1
     
     total_due = total_fees - total_paid
-    default_message = "Dear Student, your college fee is pending. Please pay at the earliest. - College Admin"
+    default_message = f"Dear Student, your school fee is pending. Please pay at the earliest. - {SCHOOL_NAME}"
     
     return render_template('admin_fees.html', fee_data=fee_data, total_fees=total_fees, total_paid=total_paid, total_due=total_due, pending_count=pending_count, default_message=default_message)
 
@@ -884,7 +899,7 @@ def get_students_by_subject(subject_id):
     subject = Subject.query.get(subject_id)
     if not subject:
         return jsonify([])
-    students = Student.query.filter_by(course_id=subject.course_id, semester=subject.semester).all()
+    students = Student.query.filter_by(class_name=subject.class_name).all()
     return jsonify([{'id': s.id, 'roll_no': s.roll_no, 'name': s.user.full_name} for s in students])
 
 # ============================================
@@ -897,33 +912,39 @@ if __name__ == '__main__':
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
         
         if not User.query.filter_by(username='admin').first():
-            admin = User(username='admin', email='admin@college.edu', password_hash=generate_password_hash('admin123'), role='admin', full_name='Administrator')
+            admin = User(username='admin', email=SCHOOL_EMAIL, password_hash=generate_password_hash('admin123'), role='admin', full_name='School Administrator')
             db.session.add(admin)
             db.session.commit()
             print("✅ Default admin created: admin / admin123")
         
+        # Create default courses (classes)
         if Course.query.count() == 0:
-            db.session.add_all([Course(name='Computer Science', code='CS', duration_years=4, total_semesters=8), Course(name='Information Technology', code='IT', duration_years=4, total_semesters=8)])
+            default_courses = [
+                Course(name='Science', code='SCI', description='Science Stream with PCM/PCB'),
+                Course(name='Commerce', code='COM', description='Commerce Stream with Accountancy, Business Studies, Economics'),
+                Course(name='Arts', code='ART', description='Arts/Humanities Stream')
+            ]
+            db.session.add_all(default_courses)
             db.session.commit()
             print("✅ Demo courses created!")
         
         if not User.query.filter_by(username='faculty1').first():
-            faculty_user = User(username='faculty1', email='faculty1@college.edu', password_hash=generate_password_hash('pass123'), role='faculty', full_name='Dr. John Smith')
+            faculty_user = User(username='faculty1', email='faculty@kdpublicschool.com', password_hash=generate_password_hash('pass123'), role='faculty', full_name='Dr. John Smith')
             db.session.add(faculty_user)
             db.session.commit()
-            db.session.add(Faculty(user_id=faculty_user.id, department='Computer Science', designation='Professor', qualification='Ph.D.', joining_date=datetime.utcnow().date()))
+            db.session.add(Faculty(user_id=faculty_user.id, department='Science', designation='Senior Teacher', qualification='Ph.D.', joining_date=datetime.utcnow().date()))
             db.session.commit()
             print("✅ Demo faculty created: faculty1 / pass123")
         
         if not User.query.filter_by(username='student1').first():
-            student_user = User(username='student1', email='student1@college.edu', password_hash=generate_password_hash('pass123'), role='student', full_name='Alice Johnson')
+            student_user = User(username='student1', email='student@kdpublicschool.com', password_hash=generate_password_hash('pass123'), role='student', full_name='Alice Johnson')
             db.session.add(student_user)
             db.session.commit()
-            student = Student(user_id=student_user.id, roll_no='CS2024001', course_id=1, semester=1, dob=datetime(2005,5,15).date(), phone='+919876543210', address='123 College Street')
+            student = Student(user_id=student_user.id, roll_no='KD2024001', course_id=1, class_name='Class 10', dob=datetime(2010,5,15).date(), phone='+919876543210', address='Chapra, Bihar')
             db.session.add(student)
             db.session.commit()
-            db.session.add(Fee(student_id=student.id, amount=50000, due_date=datetime.utcnow().date()+timedelta(days=30), paid_amount=25000, status='Partial'))
+            db.session.add(Fee(student_id=student.id, amount=25000, due_date=datetime.utcnow().date()+timedelta(days=30), paid_amount=12500, status='Partial'))
             db.session.commit()
             print("✅ Demo student created: student1 / pass123")
     
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)

@@ -18,7 +18,7 @@
                         <select class="form-select" name="subject_id" id="subjectSelect" required>
                             <option value="">Select Subject</option>
                             {% for assignment in assignments %}
-                            <option value="{{ assignment.subject.id }}">{{ assignment.subject.name }}</option>
+                            <option value="{{ assignment.subject.id }}">{{ assignment.subject.name }} ({{ assignment.subject.class_name }})</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -27,8 +27,10 @@
                     <div class="mb-3">
                         <label class="form-label">Exam Type</label>
                         <select class="form-select" name="exam_type" required>
-                            <option value="Internal I">Internal I</option>
-                            <option value="Internal II">Internal II</option>
+                            <option value="Unit Test 1">Unit Test 1</option>
+                            <option value="Unit Test 2">Unit Test 2</option>
+                            <option value="Half Yearly">Half Yearly</option>
+                            <option value="Pre-Board">Pre-Board</option>
                             <option value="Final Exam">Final Exam</option>
                         </select>
                     </div>
@@ -36,14 +38,14 @@
                 <div class="col-md-3">
                     <div class="mb-3">
                         <label class="form-label">Maximum Marks</label>
-                        <input type="number" class="form-control" name="max_marks" id="maxMarks" required>
+                        <input type="number" class="form-control" name="max_marks" id="maxMarks" placeholder="e.g., 100" required>
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="mb-3">
                         <label class="form-label">&nbsp;</label>
-                        <button type="button" class="btn btn-info d-block" onclick="loadStudentsForMarks()">
-                            Load Students
+                        <button type="button" class="btn btn-info d-block w-100" onclick="loadStudentsForMarks()">
+                            <i class="bi bi-people-fill me-1"></i>Load
                         </button>
                     </div>
                 </div>
@@ -51,21 +53,30 @@
             
             <div id="studentMarksList" style="display: none;">
                 <hr>
-                <h5>Enter Marks</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                    <h5>Enter Marks</h5>
+                    <div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="downloadMarksTemplate()">
+                            <i class="bi bi-download"></i> Download Template
+                        </button>
+                    </div>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-bordered">
                         <thead class="table-dark">
                             <tr>
                                 <th>Roll No</th>
                                 <th>Student Name</th>
-                                <th>Marks Obtained</th>
+                                <th>Marks Obtained (Out of <span id="maxMarksDisplay">0</span>)</th>
                             </tr>
                         </thead>
                         <tbody id="studentMarksTableBody">
                         </tbody>
                     </table>
                 </div>
-                <button type="submit" class="btn btn-primary">Save Marks</button>
+                <button type="submit" class="btn btn-primary mt-3">
+                    <i class="bi bi-save me-2"></i>Save Marks
+                </button>
             </div>
         </form>
     </div>
@@ -85,6 +96,9 @@ function loadStudentsForMarks() {
         return;
     }
     
+    document.getElementById('maxMarksDisplay').textContent = maxMarks;
+    showToast('Loading students...', 'info');
+    
     fetch('/api/get_students_by_subject/' + subjectId)
         .then(response => response.json())
         .then(data => {
@@ -96,13 +110,40 @@ function loadStudentsForMarks() {
                     '<td>' + student.name + '</td>' +
                     '<td>' +
                         '<input type="number" class="form-control" name="marks_' + student.id + '" ' +
-                        'min="0" max="' + maxMarks + '" step="0.5" required>' +
+                        'min="0" max="' + maxMarks + '" step="0.5" placeholder="Enter marks">' +
                     '</td>' +
                 '</tr>';
             });
             tbody.innerHTML = html;
             document.getElementById('studentMarksList').style.display = 'block';
+            showToast(data.length + ' students loaded', 'success');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error loading students', 'danger');
         });
+}
+
+function downloadMarksTemplate() {
+    var subjectSelect = document.getElementById('subjectSelect');
+    var subjectName = subjectSelect.options[subjectSelect.selectedIndex]?.text || 'Subjects';
+    var maxMarks = document.getElementById('maxMarks').value;
+    
+    var rows = document.querySelectorAll('#studentMarksTableBody tr');
+    var csv = 'Roll No,Student Name,Marks (Out of ' + maxMarks + ')\n';
+    
+    rows.forEach(row => {
+        var cells = row.cells;
+        csv += '"' + cells[0].textContent + '","' + cells[1].textContent + '",\n';
+    });
+    
+    var blob = new Blob([csv], { type: 'text/csv' });
+    var link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = subjectName.replace(/[^a-zA-Z0-9]/g, '_') + '_marks_template.csv';
+    link.click();
+    URL.revokeObjectURL(link.href);
+    showToast('Template downloaded', 'success');
 }
 </script>
 {% endblock %}

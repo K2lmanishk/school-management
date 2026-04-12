@@ -14,19 +14,21 @@
             <div class="card-body">
                 <form method="POST" action="{{ url_for('add_subject') }}">
                     <div class="mb-3">
-                        <label class="form-label">Course</label>
-                        <select class="form-select" name="course_id" required>
-                            <option value="">Select Course</option>
+                        <label class="form-label">Stream (Optional)</label>
+                        <select class="form-select" name="course_id">
+                            <option value="">Select Stream (Science/Commerce/Arts)</option>
                             {% for course in courses %}
                             <option value="{{ course.id }}">{{ course.name }}</option>
                             {% endfor %}
                         </select>
+                        <small class="text-muted">For Class 11-12, select the stream</small>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Semester</label>
-                        <select class="form-select" name="semester" required>
-                            {% for i in range(1, 9) %}
-                            <option value="{{ i }}">Semester {{ i }}</option>
+                        <label class="form-label">Class</label>
+                        <select class="form-select" name="class_name" required>
+                            <option value="">Select Class</option>
+                            {% for class_item in classes %}
+                            <option value="{{ class_item }}">{{ class_item }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -39,14 +41,12 @@
                         <input type="text" class="form-control" name="code" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Credits</label>
-                        <input type="number" class="form-control" name="credits" required>
-                    </div>
-                    <div class="mb-3">
                         <label class="form-label">Type</label>
                         <select class="form-select" name="type" required>
                             <option value="Theory">Theory</option>
-                            <option value="Lab">Lab</option>
+                            <option value="Practical">Practical</option>
+                            <option value="Language">Language</option>
+                            <option value="Elective">Elective</option>
                         </select>
                     </div>
                     <button type="submit" class="btn btn-primary">Save Subject</button>
@@ -66,9 +66,8 @@
                                 <th>ID</th>
                                 <th>Subject Name</th>
                                 <th>Code</th>
-                                <th>Course</th>
-                                <th>Semester</th>
-                                <th>Credits</th>
+                                <th>Class</th>
+                                <th>Stream</th>
                                 <th>Type</th>
                             </tr>
                         </thead>
@@ -78,9 +77,8 @@
                                 <td>{{ subject.id }}</td>
                                 <td>{{ subject.name }}</td>
                                 <td>{{ subject.code }}</td>
-                                <td>{{ subject.course.name }}</td>
-                                <td>{{ subject.semester }}</td>
-                                <td>{{ subject.credits }}</td>
+                                <td>{{ subject.class_name }}</td>
+                                <td>{{ subject.course.name if subject.course else 'N/A' }}</td>
                                 <td>{{ subject.type }}</td>
                             </tr>
                             {% endfor %}

@@ -20,17 +20,17 @@
         <div class="card bg-success text-white mb-4">
             <div class="card-body">
                 <i class="bi bi-book" style="font-size: 2rem;"></i>
-                <h5 class="mt-2">{{ student.course.name if student and student.course else 'N/A' }}</h5>
-                <p class="mb-0">Course</p>
+                <h5 class="mt-2">{{ student.class_name if student else 'N/A' }}</h5>
+                <p class="mb-0">Class</p>
             </div>
         </div>
     </div>
     <div class="col-xl-3 col-md-6">
         <div class="card bg-warning text-white mb-4">
             <div class="card-body">
-                <i class="bi bi-layers" style="font-size: 2rem;"></i>
-                <h5 class="mt-2">Semester {{ student.semester if student else 'N/A' }}</h5>
-                <p class="mb-0">Current Semester</p>
+                <i class="bi bi-mortarboard" style="font-size: 2rem;"></i>
+                <h5 class="mt-2">{{ student.course.name if student and student.course else 'N/A' }}</h5>
+                <p class="mb-0">Stream</p>
             </div>
         </div>
     </div>
@@ -54,16 +54,18 @@
                 <div class="list-group">
                     {% for mark in recent_marks %}
                     <div class="list-group-item">
-                        <div class="d-flex justify-content-between">
-                            <h6>{{ mark.subject.name }}</h6>
-                            <span class="badge bg-primary">{{ mark.obtained_marks }}/{{ mark.max_marks }}</span>
+                        <div class="d-flex justify-content-between align-items-center flex-wrap">
+                            <div>
+                                <h6 class="mb-1">{{ mark.subject.name }}</h6>
+                                <small class="text-muted">{{ mark.exam_type }}</small>
+                            </div>
+                            <span class="badge bg-primary fs-6">{{ mark.obtained_marks }}/{{ mark.max_marks }}</span>
                         </div>
-                        <small>{{ mark.exam_type }}</small>
                     </div>
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-muted">No marks recorded yet.</p>
+                <p class="text-muted text-center py-4">No marks recorded yet.</p>
                 {% endif %}
             </div>
         </div>
@@ -75,13 +77,51 @@
             <div class="card-body">
                 {% if notices %}
                 {% for notice in notices %}
-                <div class="alert alert-info">
+                <div class="alert alert-info mb-3">
                     <strong>{{ notice.title }}</strong><br>
-                    <small>{{ notice.content[:100] }}...</small>
+                    <small>{{ notice.content[:100] }}{% if notice.content|length > 100 %}...{% endif %}</small>
+                    <div class="text-muted mt-1 small">{{ notice.created_at.strftime('%d %b %Y') }}</div>
                 </div>
                 {% endfor %}
                 {% else %}
-                <p class="text-muted">No notices available.</p>
+                <p class="text-muted text-center py-4">No notices available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header"><i class="bi bi-cash-stack"></i> Fee Status</div>
+            <div class="card-body">
+                {% if fee %}
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="progress mb-2" style="height: 25px;">
+                            {% set percent = (fee.paid_amount / fee.amount * 100) if fee.amount > 0 else 0 %}
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ percent }}%" aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100">
+                                {{ "%.1f"|format(percent) }}%
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Paid: ₹{{ "%.2f"|format(fee.paid_amount) }}</span>
+                            <span>Total: ₹{{ "%.2f"|format(fee.amount) }}</span>
+                            <span>Due: ₹{{ "%.2f"|format(fee.amount - fee.paid_amount) }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                        <span class="badge {% if fee.status == 'Paid' %}bg-success{% elif fee.status == 'Partial' %}bg-warning{% else %}bg-danger{% endif %} p-2 fs-6">
+                            {{ fee.status }}
+                        </span>
+                        {% if fee.status != 'Paid' %}
+                        <small class="d-block text-muted mt-1">Due Date: {{ fee.due_date.strftime('%d %b %Y') }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No fee records found.</p>
                 {% endif %}
             </div>
         </div>

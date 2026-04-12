@@ -10,33 +10,59 @@
 <div class="card mb-4">
     <div class="card-header"><i class="bi bi-calendar-check"></i> Detailed Attendance Log</div>
     <div class="card-body">
+        {% if attendance %}
         <div class="table-responsive">
             <table class="table table-bordered table-hover">
                 <thead class="table-dark">
                     <tr>
                         <th>Date</th>
                         <th>Subject</th>
+                        <th>Class</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for att, sub in attendance %}
                     <tr>
-                        <td>{{ att.date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ att.date.strftime('%d %b %Y') }}</td>
                         <td>{{ sub.name }} ({{ sub.code }})</td>
+                        <td>{{ sub.class_name }}</td>
                         <td>
-                            <span class="badge {% if att.status == 'Present' %}bg-success{% else %}bg-danger{% endif %}">
+                            <span class="badge {% if att.status == 'Present' %}bg-success{% else %}bg-danger{% endif %} p-2">
+                                <i class="bi bi-{% if att.status == 'Present' %}check-circle{% else %}x-circle{% endif %} me-1"></i>
                                 {{ att.status }}
                             </span>
                         </td>
                     </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="3" class="text-center">No attendance records found.</td>
-                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-calendar-x" style="font-size: 4rem; opacity: 0.3;"></i>
+            <p class="text-muted mt-3">No attendance records found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-info text-white"><i class="bi bi-graph-up"></i> Attendance Summary</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 text-center">
+                <h3>Total Classes</h3>
+                <div class="display-4">{{ attendance|length }}</div>
+            </div>
+            <div class="col-md-4 text-center">
+                <h3>Present</h3>
+                <div class="display-4 text-success">{{ attendance|selectattr('0.status', 'equalto', 'Present')|list|length }}</div>
+            </div>
+            <div class="col-md-4 text-center">
+                <h3>Absent</h3>
+                <div class="display-4 text-danger">{{ attendance|rejectattr('0.status', 'equalto', 'Present')|list|length }}</div>
+            </div>
         </div>
     </div>
 </div>

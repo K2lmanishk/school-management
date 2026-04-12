@@ -12,7 +12,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128))
     role = db.Column(db.String(20), nullable=False)
     full_name = db.Column(db.String(100))
-    profile_pic = db.Column(db.String(200), default='default.png')  # ✅ ADDED
+    profile_pic = db.Column(db.String(200), default='default.png')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     student_profile = db.relationship('Student', backref='user', uselist=False)
@@ -26,7 +26,7 @@ class Student(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True)
     roll_no = db.Column(db.String(20), unique=True, nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey('courses.id'))
-    semester = db.Column(db.Integer)
+    class_name = db.Column(db.String(50))  # Class 1 to Class 12
     dob = db.Column(db.Date)
     phone = db.Column(db.String(15))
     address = db.Column(db.Text)
@@ -54,8 +54,7 @@ class Course(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     code = db.Column(db.String(20), unique=True)
-    duration_years = db.Column(db.Integer)
-    total_semesters = db.Column(db.Integer)
+    description = db.Column(db.Text)
     
     subjects = db.relationship('Subject', backref='course', lazy=True)
     students = db.relationship('Student', backref='course', lazy=True)
@@ -64,8 +63,8 @@ class Course(db.Model):
 class Subject(db.Model):
     __tablename__ = 'subjects'
     id = db.Column(db.Integer, primary_key=True)
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'))
-    semester = db.Column(db.Integer)
+    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=True)
+    class_name = db.Column(db.String(50), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     code = db.Column(db.String(20), unique=True)
     credits = db.Column(db.Integer)
@@ -82,7 +81,6 @@ class Enrollment(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'))
     course_id = db.Column(db.Integer, db.ForeignKey('courses.id'))
     academic_year = db.Column(db.String(20))
-    current_semester = db.Column(db.Integer)
     enrollment_date = db.Column(db.Date, default=datetime.utcnow)
 
 class FacultyAssignment(db.Model):
@@ -100,8 +98,8 @@ class Timetable(db.Model):
     subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'))
     faculty_id = db.Column(db.Integer, db.ForeignKey('faculty.id'))
     room_no = db.Column(db.String(20))
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'))
-    semester = db.Column(db.Integer)
+    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=True)
+    class_name = db.Column(db.String(50))
 
 class Attendance(db.Model):
     __tablename__ = 'attendance'

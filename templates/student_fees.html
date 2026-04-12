@@ -10,6 +10,7 @@
 <div class="card mb-4">
     <div class="card-header"><i class="bi bi-receipt"></i> Fee History</div>
     <div class="card-body">
+        {% if fees %}
         <div class="table-responsive">
             <table class="table table-bordered table-hover">
                 <thead class="table-dark">
@@ -26,24 +27,28 @@
                     {% for fee in fees %}
                     <tr>
                         <td>₹{{ "%.2f"|format(fee.amount) }}</td>
-                        <td>{{ fee.due_date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ fee.due_date.strftime('%d %b %Y') }}</td>
                         <td>₹{{ "%.2f"|format(fee.paid_amount) }}</td>
-                        <td>₹{{ "%.2f"|format(fee.amount - fee.paid_amount) }}</td>
+                        <td><strong>₹{{ "%.2f"|format(fee.amount - fee.paid_amount) }}</strong></td>
                         <td>
-                            <span class="badge {% if fee.status == 'Paid' %}bg-success{% elif fee.status == 'Partial' %}bg-warning{% else %}bg-danger{% endif %}">
-                                {{ fee.status }}
+                            <span class="badge {% if fee.status == 'Paid' %}bg-success{% elif fee.status == 'Partial' %}bg-warning{% else %}bg-danger{% endif %} p-2">
+                                {% if fee.status == 'Paid' %}✅ Paid
+                                {% elif fee.status == 'Partial' %}⚠️ Partial
+                                {% else %}❌ Pending{% endif %}
                             </span>
                         </td>
-                        <td>{{ fee.payment_date.strftime('%Y-%m-%d') if fee.payment_date else 'N/A' }}</td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="6" class="text-center">No fee records found.</td>
+                        <td>{{ fee.payment_date.strftime('%d %b %Y') if fee.payment_date else '-' }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-cash-stack" style="font-size: 4rem; opacity: 0.3;"></i>
+            <p class="text-muted mt-3">No fee records found.</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
