@@ -892,13 +892,14 @@ def uploaded_file(filename):
 # ============================================
 # 16. API ENDPOINTS
 # ============================================
-@app.route('/setup')
-def setup():
+@app.route('/setup-db')
+def setup_db():
     try:
         db.create_all()
-        from models import User
+        from models import User, Course, Faculty, Student, Fee
         from werkzeug.security import generate_password_hash
         
+        # Create admin
         if not User.query.filter_by(username='admin').first():
             admin = User(
                 username='admin',
@@ -909,8 +910,18 @@ def setup():
             )
             db.session.add(admin)
             db.session.commit()
-            return "✅ Database setup complete! Admin: admin / admin123"
-        return "✅ Database already exists!"
+            
+        # Create demo courses
+        if Course.query.count() == 0:
+            courses = [
+                Course(name='Science', code='SCI', description='Science Stream'),
+                Course(name='Commerce', code='COM', description='Commerce Stream'),
+                Course(name='Arts', code='ART', description='Arts Stream')
+            ]
+            db.session.add_all(courses)
+            db.session.commit()
+            
+        return "✅ Database setup complete!<br><br>Admin: admin / admin123<br><br><a href='/login'>Go to Login</a>"
     except Exception as e:
         return f"❌ Error: {str(e)}"
 
