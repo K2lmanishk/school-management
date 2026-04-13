@@ -943,7 +943,7 @@ if __name__ == '__main__':
             student = Student(user_id=student_user.id, roll_no='KD2024001', course_id=1, class_name='Class 10', dob=datetime(2010,5,15).date(), phone='+919876543210', address='Chapra, Bihar')
             db.session.add(student)
             db.session.commit()
-                        db.session.add(Fee(student_id=student.id, amount=25000, due_date=datetime.utcnow().date()+timedelta(days=30), paid_amount=12500, status='Partial'))
+            db.session.add(Fee(student_id=student.id, amount=25000, due_date=datetime.utcnow().date()+timedelta(days=30), paid_amount=12500, status='Partial'))
             db.session.commit()
             print("✅ Demo student created: student1 / pass123")
     
