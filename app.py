@@ -892,6 +892,27 @@ def uploaded_file(filename):
 # ============================================
 # 16. API ENDPOINTS
 # ============================================
+@app.route('/setup')
+def setup():
+    try:
+        db.create_all()
+        from models import User
+        from werkzeug.security import generate_password_hash
+        
+        if not User.query.filter_by(username='admin').first():
+            admin = User(
+                username='admin',
+                email='admin@school.edu',
+                password_hash=generate_password_hash('admin123'),
+                role='admin',
+                full_name='Administrator'
+            )
+            db.session.add(admin)
+            db.session.commit()
+            return "✅ Database setup complete! Admin: admin / admin123"
+        return "✅ Database already exists!"
+    except Exception as e:
+        return f"❌ Error: {str(e)}"
 
 @app.route('/api/get_students_by_subject/<int:subject_id>')
 @login_required
