@@ -11,7 +11,7 @@ ENV/
 *.db
 *.sqlite
 *.sqlite3
-#instance/
+instance/
 
 # Uploads
 static/uploads/*
